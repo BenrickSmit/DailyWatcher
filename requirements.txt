@@ -1,0 +1,4 @@
+pysqlite3 
+requests
+pytz
+Flask==2.0.1

@@ -1,228 +1,66 @@
-# Take-Home Assignment
+## Project Description
 
-The goal of this take-home assignment is to evaluate your abilities to use API, data processing and transformation, SQL, and implement a new API service in Python.
-
-You should first fork this repository, and then send us the code or the url of your forked repository via email.
-
-**Please do not submit any pull requests to this repository.**
-
-You need to perform the following **Two** tasks:
-
-## Task1
-### Problem Statement:
-1. Retrieve the financial data of Two given stocks (IBM, Apple Inc.)for the most recently two weeks. Please using an free API provider named [AlphaVantage](https://www.alphavantage.co/documentation/) 
-2. Process the raw API data response, a sample output after process should be like:
-```
-{
-    "symbol": "IBM",
-    "date": "2023-02-14",
-    "open_price": "153.08",
-    "close_price": "154.52",
-    "volume": "62199013",
-},
-{
-    "symbol": "IBM",
-    "date": "2023-02-13",
-    "open_price": "153.08",
-    "close_price": "154.52",
-    "volume": "59099013"
-},
-{
-    "symbol": "IBM",
-    "date": "2023-02-12",
-    "open_price": "153.08",
-    "close_price": "154.52",
-    "volume": "42399013"
-},
-...
-``` 
-3. Insert the records above into a table named `financial_data` in your local database, column name should be same as the processed data from step 2 above (symbol, date, open_price, close_price, volume) 
+This project makes use of Flask, Python3, and SQLite to create an API service that can be queried from the local machine at port 5000. It retrieves the stock
+data for the last while by accessing AlphaVantage's API and then storing it locally on the device. The following two API access calls have been tested and their alternatives, as long as the service has been run adequately
 
 
-## Task2
-### Problem Statement:
-1. Implement an Get financial_data API to retrieve records from `financial_data` table, please note that:
-    - the endpoint should accept following parameters: start_date, end_date, symbol, all parameters are optional
-    - the endpoint should support pagination with parameter: limit and page, if no parameters are given, default limit for one page is 5
-    - the endpoint should return an result with three properties:
-        - data: an array includes actual results
-        - pagination: handle pagination with four properties
-            
-            - count: count of all records without panigation
-            - page: current page index
-            - limit: limit of records can be retrieved for single page
-            - pages: total number of pages
-        - info: includes any error info if applies
-    
+`curl 'http://localhost:5000/api/financial_data?start_date=2023-01-01&end_date=2023-01-14&symbol=IBM&limit=3&page=2'`
+`curl http://localhost:5000/api/statistics?start_date=2023-01-01&end_date=2023-01-31&symbol=IBM`
 
-Sample Request:
-```bash
-curl -X GET 'http://localhost:5000/api/financial_data?start_date=2023-01-01&end_date=2023-01-14&symbol=IBM&limit=3&page=2'
+## Tech Stack
+This project is built with Python3, Flask, SQLite, and Docker
 
-```
-Sample Response:
-```
-{
-    "data": [
-        {
-            "symbol": "IBM",
-            "date": "2023-01-05",
-            "open_price": "153.08",
-            "close_price": "154.52",
-            "volume": "62199013",
-        },
-        {
-            "symbol": "IBM",
-            "date": "2023-01-06",
-            "open_price": "153.08",
-            "close_price": "154.52",
-            "volume": "59099013"
-        },
-        {
-            "symbol": "IBM",
-            "date": "2023-01-09",
-            "open_price": "153.08",
-            "close_price": "154.52",
-            "volume": "42399013"
-        }
-    ],
-    "pagination": {
-        "count": 20,
-        "page": 2,
-        "limit": 3,
-        "pages": 7
-    },
-    "info": {'error': ''}
-}
+## How to Use Application
+In order to use the application you can run the "run_application.sh" or "run_application.cmd" file depending on the OS you're currently using. If not, follow the instrutions below. You can also stop the application with the same method, i.e. by running either "stop_all.cmd" or "stop_all.sh"
 
-```
+PS: If there is some trouble and there is no access directly to the API, just run the db_api.py directly. Sometimes it works, sometimes it doesn't
 
-2. Implement an Get statistics API to perform the following calculations on the data in given period of time:
-    - Calculate the average daily open price for the period
-    - Calculate the average daily closing price for the period
-    - Calculate the average daily volume for the period
+Starting:
+For Windows (tested):
+`docker-compose build dailywatcher api
+ docker-compose up -d
+ timeout /t 5
+ docker-compose ps
+ docker-compose exec dailywatcher python3 db_api.py
+ echo API is now accessible at http://localhost:8000/`
 
-    - the endpoint should accept following parameters: start_date, end_date, symbols, all parameters are required
-    - the endpoint should return an result with two properties:
-        - data: calculated statistic results
-        - info: includes any error info if applies
+For Linux (untested):
+`docker-compose build dailywatcher api
+ docker-compose up -d api
+ timeout 30s docker-compose logs -f db | grep -q 'database system is ready to accept connections'
+ docker-compose run dailywatcher python3 financial/db_api.py`
 
-Sample request:
-```bash
-curl -X GET http://localhost:5000/api/statistics?start_date=2023-01-01&end_date=2023-01-31&symbol=IBM
 
-```
-Sample response:
-```
-{
-    "data": {
-        "start_date": "2023-01-01",
-        "end_date": "2023-01-31",
-        "symbol": "IBM",
-        "average_daily_open_price": 123.45,
-        "average_daily_close_price": 234.56,
-        "average_daily_volume": 1000000
-    },
-    "info": {'error': ''}
-}
+Stopping:
+For Windows (tested):
+`docker-compose down
+ docker ps -aq | ForEach-Object { docker stop $_ 2>nul "&" docker rm $_ }
+ docker rmi $(docker images -aq)
+ docker stop $(docker ps -aq)`
 
-```
+For Linux (untested):
+`docker-compose down
+ docker stop $(docker ps -aq)
+ docker rm $(docker ps -aq)
+ docker rmi $(docker images -aq)`
 
-## What you should deliver:
-Directory structure:
-```
-project-name/
-├── model.py
-├── schema.sql
-├── get_raw_data.py
-├── Dockerfile
-├── docker-compose.yml
-├── README.md
-├── requirements.txt
-└── financial/<Include API service code here>
+## API Upkeep
+In order to ensure the api stays anonymous, simple add a file in the financial folder in the root directory, and title it 'api_key.txt'. Paste the api key in here.
 
-```
+## Design Choices
 
-1. A `get_raw_data.py` file in root folder
+# Database Choice
 
-    Action: 
-    
-    Run 
-    ```bash
-    python get_raw_data.py
-    ```
+I settled on SQLite as not only is it lightweight, serverless, and self-contained, 
+but it also enables me to create only a single file database which will be very
+useful for this kind of program that only needs the information quickly and temporarily and at a smaller scale.
+It also adds to the efficiency of the program since there is no network overhead and only
+Requests will then require any overhead.
 
-    Expectation: 
-    
-    1. Financial data will be retrieved from API and processed,then insert all processed records into table `financial_data` in local db
-    2. Duplicated records should be avoided when executing get_raw_data multiple times, consider implementing your own logic to perform upsert operation if the database you select does not have native support for such operation.
+# API Caller
 
-2. A `schema.sql` file in root folder
-    
-    Define schema for financial_data table, if you prefer to use an ORM library, just **ignore** this deliver item and jump to item3 below.
+I settled on Requests as it is the simplest, most intuitive, and readable solution. Not only can I expand it
+easily should the project require more help, but it can be used with most APIs out there as well.
 
-    Action: Run schema definition in local db
-
-    Expectation: A new table named `financial_data` should be created if not exists in db
-
-3. (Optional) A `model.py` file: 
-    
-    If you perfer to use a ORM library instead of DDL, please include your model definition in `model.py`, and describe how to perform migration in README.md file
-
-4. A `Dockerfile` file in root folder
-
-    Build up your local API service
-
-5. A `docker-compose.yml` file in root folder
-
-    Two services should be defined in docker-compose.yml: Database and your API
-
-    Action:
-
-    ```bash
-    docker-compose up
-    ```
-
-    Expectation:
-    Both database and your API service is up and running in local development environment
-
-6. A `financial` sub-folder:
-
-    Put all API implementation related codes in here
-
-7. `README.md`: 
-
-    You should include:
-    - A brief project description
-    - Tech stack you are using in this project
-    - How to run your code in local environment
-    - Provide a description of how to maintain the API key to retrieve financial data from AlphaVantage in both local development and production environment.
-
-8. A `requirements.txt` file:
-
-    It should contain your dependency libraries.
-
-## Requirements:
-
-- The program should be written in Python 3.
-- You are free to use any API and libraries you like, but should include a brief explanation of why you chose the API and libraries you used in README.
-- The API key to retrieve financial data should be stored securely. Please provide a description of how to maintain the API key from both local development and production environment in README.
-- The database in Problem Statement 1 could be created using SQLite/MySQL/.. with your own choice.
-- The program should include error handling to handle cases where the API returns an error or the data is not in the correct format.
-- The program should cover as many edge cases as possible, not limited to expectations from deliverable above.
-- The program should use appropriate data structures and algorithms to store the data and perform the calculations.
-- The program should include appropriate documentation, including docstrings and inline comments to explain the code.
-
-## Evaluation Criteria:
-
-Your solution will be evaluated based on the following criteria:
-
-- Correctness: Does the program produce the correct results?
-- Code quality: Is the code well-structured, easy to read, and maintainable?
-- Design: Does the program make good use of functions, data structures, algorithms, databases, and libraries?
-- Error handling: Does the program handle errors and unexpected input appropriately?
-- Documentation: Is the code adequately documented, with clear explanations of the algorithms and data structures used?
-
-## Additional Notes:
-
-You have 7 days to complete this assignment and submit your solution.
+# API Service
+Flask is probably the best way to create a simple HTTP server for API access while ensuring I keep simplicity and efficiency

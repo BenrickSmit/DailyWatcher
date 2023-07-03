@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+  dailywatcher:
+    image: dailywatcher_sqlite:latest
+    volumes:
+      - ./financial:/app/financial
+    command: sqlite3 /app/financial/stock_fornight.db
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    secrets:
+     - my_secret
+
+  api:
+    build: 
+      context: .
+    ports: 
+      - 5000:5000
+    volumes:
+      - ./financial:/app/financial
+    depends_on:
+      - dailywatcher
+
+secrets:
+  my_secret:
+    file: ./financial/api_key.txt
+
+
