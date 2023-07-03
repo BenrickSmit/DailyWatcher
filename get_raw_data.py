@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+This module is used to create the financial_data table in a local sqlite db.
+
+This module provides functionality for logging, and simple database creation
+via sqlite3 and logging.
+
+Author: B.G. Smit
+"""
+
 import financial.manage_database as manage_database
 import financial.db_api as database_api
 import logging
